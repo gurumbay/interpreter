@@ -51,6 +51,19 @@ struct AssignExpr : Expr {
         : name(n), value(std::move(v)) {}
 };
 
+struct ListExpr : Expr {
+    std::vector<std::unique_ptr<Expr>> elements;
+    ListExpr(std::vector<std::unique_ptr<Expr>> elems)
+        : elements(std::move(elems)) {}
+};
+
+struct IndexExpr : Expr {
+    std::unique_ptr<Expr> collection;
+    std::unique_ptr<Expr> index;
+    IndexExpr(std::unique_ptr<Expr> coll, std::unique_ptr<Expr> idx)
+        : collection(std::move(coll)), index(std::move(idx)) {}
+};
+
 struct CallExpr : Expr {
     std::unique_ptr<Expr> callee;
     std::vector<std::unique_ptr<Expr>> arguments;

@@ -1,78 +1,122 @@
-# Showcase: All supported features of this Python-like interpreter
+# =============================================
+# DEMONSTRATION OF INTERPRETER CAPABILITIES
+# Matches exactly what the C++ interpreter supports
+# =============================================
 
-print("========== Hello, world! ==========")
-print("Hello, world!\n")
+# --------------------------
+# 1. BASIC OUTPUT AND MATH
+# --------------------------
+print("=== BASIC OUTPUT AND MATH ===")
 
-print("========== String Concatenation ==========")
-name = "Alex"
-print("Hello, " + name + "!\n")
+print("Hello, world!!!\n")
 
-print("========== String Escape Sequences ==========")
-print("This is a string with a newline:\nAnd a tab:\tDone.")
-print("But we can also escape symbols. For example: \\n \\t \\r\n")
+print("1 + 2 * 3 =", 1 + 2 * 3)    # 7
+print("10 - 5 / 2 =", 10 - 5 / 2)  # 7.5
+print("10 % 3 =", 10 % 3)          # 1 (modulo)
+print("-(5 - 10) =", -(5 - 10))    # 5 (unary minus)
 
-print("========== Variable Assignment and Arithmetic ==========")
-a = 5
-b = 10
-sum = a + b
-print("Sum of", a, "and", b, "is", sum, "\n")
+# --------------------------
+# 2. VARIABLES AND ASSIGNMENT
+# --------------------------
+print("\n=== VARIABLES ===")
+x = 10
+y = 3
+z = x * y
+print("x =", x)
+print("y =", y)
+print("z = x * y =", z)   # 30
 
-print("========== If-Else Statement ==========")
-if sum > 10:
-    print("Sum is greater than 10\n")
+x = "String"
+y = "concatenation"
+z = x + " " + y
+print(z)                  # String concatenation
+
+# --------------------------
+# 3. COMPARISONS AND LOGIC
+# --------------------------
+print("\n=== COMPARISONS ===")
+print("5 > 3:", 5 > 3)      # 1.0 (true)
+print("5 == 3:", 5 == 3)    # 0.0 (false)
+print("5 != 3:", 5 != 3)    # 1.0 (true)
+print("not 0:", not 0)      # 1.0 (true)
+print("1 and 0:", 1 and 0)  # 0.0 (false)
+print("1 or 0:", 1 or 0)    # 1.0 (true)
+
+# --------------------------
+# 4. CONDITIONALS (IF-ELSE)
+# --------------------------
+print("\n=== CONDITIONALS ===")
+a = 10
+print("a =", a)
+if a > 5:
+    print("a is greater than 5")
 else:
-    print("Sum is not greater than 10\n")
+    print("a is 5 or less")
 
-print("========== While Loop ==========")
-counter = 0
-while counter < 3:
-    print("While loop iteration:", counter)
-    counter = counter + 1
-print("------------------------------\n")
+if "":
+    print("This won't print")
+else:
+    print("Empty string is false")
 
-print("========== For Loop with range(stop) ==========")
-for i in range(5):
-    print("i =", i)
-print("------------------------------\n")
+# Nested if
+b = 15
+if a > 5:
+    if b > 10:
+        print("Both conditions true")
 
-print("========== For Loop with range(start, stop) ==========")
-for j in range(2, 6):
-    print("j =", j)
-print("------------------------------\n")
+# --------------------------
+# 5. WHILE LOOPS
+# --------------------------
+print("\n=== WHILE LOOPS ===")
+counter = 3
+while counter > 0:
+    print(counter)
+    counter = counter - 1
 
-print("========== For Loop with range(start, stop, step) ==========")
-for k in range(10, 0, -2):
-    print("k =", k)
-print("------------------------------\n")
-
-print("========== Break and Continue Demo ==========")
-print("Demo: break in while loop")
+# With break/continue
+print("\nWhile with break/continue:")
 i = 0
-while i < 10:
-    if i == 3:
-        print("Breaking at i =", i)
-        break
-    print("i =", i)
+while i < 5:
     i = i + 1
-print("After break in while loop\n")
-
-print("Demo: continue in for loop")
-for j in range(5):
-    if j == 2:
-        print("Continuing at j =", j)
+    if i == 2:
         continue
-    print("j =", j)
-print("After continue in for loop\n")
+    if i == 4:
+        break
+    print(i)
 
-print("========== Nested Loops and Arithmetic ==========")
-print("Multiplication table (1 to 3):")
-for x in range(1, 4):
-    for y in range(1, 4):
-        print(x, "*", y, "=", x * y)
-    print("-----")
-print("------------------------------\n")
+# --------------------------
+# 6. FOR LOOPS WITH RANGE
+# --------------------------
+print("\n=== FOR LOOPS ===")
+# Basic range
+print("range(5):")
+for i in range(5):
+    print(i)
 
-# Comments are supported!
-# The next line prints a final message
-print("========== END OF SHOWCASE ==========")
-print("Showcase complete!\n")
+# Range with start/stop
+print("\nrange(2, 5):")
+for i in range(2, 5):
+    print(i)
+
+# Range with step
+print("\nrange(0, 10, 2):")
+for i in range(0, 10, 2):
+    print(i)
+
+# With break/continue
+print("\nFor with break/continue:")
+for i in range(10):
+    if i % 2 == 0:
+        continue
+    if i > 7:
+        break
+    print(i)
+
+# --------------------------
+# 7. STRING OPERATIONS
+# --------------------------
+print("\n=== STRING OPERATIONS ===")
+s1 = "Hello"
+s2 = "Gurumbay"
+print(s1 + " " + s2)      # Concatenation
+print(s1[0])              # Indexing: 'H'

@@ -164,8 +164,9 @@ std::unique_ptr<Expr> Parser::parseBinaryExpr(int precedence) {
     while (true) {
         TokenType opType = peek().type;
         // Stop if at a statement separator or end of expression
-        if (opType == TokenType::Newline || opType == TokenType::Semicolon || opType == TokenType::Colon ||
-            opType == TokenType::RightParen || opType == TokenType::EndOfInput || opType == TokenType::Comma) {
+        if (opType == TokenType::Semicolon || opType == TokenType::Colon || opType == TokenType::Comma ||
+            opType == TokenType::RightParen || opType == TokenType::RightBracket ||
+            opType == TokenType::EndOfInput || opType == TokenType::Newline) {
             break;
         }
         int opPrec = getPrecedence(opType);
@@ -189,31 +190,47 @@ std::unique_ptr<Expr> Parser::parseUnaryExpr() {
 }
 
 std::unique_ptr<Expr> Parser::parsePrimary() {
-    // std::cout << "[parsePrimary] At token: '" << peek().text << "' (" << tokenTypeToString(peek().type) << ")\n";
+    // Parse base primary (number, string, variable, list, parenthesis)
+    std::unique_ptr<Expr> expr;
     if (match(TokenType::Number)) {
-        return std::make_unique<NumberExpr>(std::get<double>(previous().value));
-    }
-    if (match(TokenType::String)) {
-        return std::make_unique<StringExpr>(std::get<std::string>(previous().value));
-    }
-    if (match(TokenType::Identifier)) {
+        expr = std::make_unique<NumberExpr>(std::get<double>(previous().value));
+    } else if (match(TokenType::String)) {
+        expr = std::make_unique<StringExpr>(std::get<std::string>(previous().value));
+    } else if (match(TokenType::Identifier)) {
         std::string name = previous().text;
-        // Function call or variable
         if (match(TokenType::LeftParen)) {
             auto args = parseArguments();
             if (!match(TokenType::RightParen)) throw std::runtime_error("Expected ')' after function arguments");
-            return std::make_unique<CallExpr>(std::make_unique<VariableExpr>(name), std::move(args));
+            expr = std::make_unique<CallExpr>(std::make_unique<VariableExpr>(name), std::move(args));
+        } else {
+            expr = std::make_unique<VariableExpr>(name);
         }
-        return std::make_unique<VariableExpr>(name);
-    }
-    if (match(TokenType::LeftParen)) {
-        auto expr = parseExpression();
+    } else if (match(TokenType::LeftBracket)) {
+        std::vector<std::unique_ptr<Expr>> elements;
+        if (!check(TokenType::RightBracket)) {
+            do {
+                elements.push_back(parseExpression());
+            } while (match(TokenType::Comma));
+        }
+        if (!match(TokenType::RightBracket))
+            throw std::runtime_error("Expected ']' after list elements");
+        expr = std::make_unique<ListExpr>(std::move(elements));
+    } else if (match(TokenType::LeftParen)) {
+        expr = parseExpression();
         if (!match(TokenType::RightParen)) {
             throw std::runtime_error("Expected ')' after expression");
         }
-        return expr;
+    } else {
+        throw std::runtime_error("Unexpected token in expression: " + peek().text + tokenTypeToString(peek().type));
     }
-    throw std::runtime_error("Unexpected token in expression: " + peek().text + tokenTypeToString(peek().type));
+    // Handle chained indexing: expr[index][index2]...
+    while (match(TokenType::LeftBracket)) {
+        auto index = parseExpression();
+        if (!match(TokenType::RightBracket))
+            throw std::runtime_error("Expected ']' after index expression");
+        expr = std::make_unique<IndexExpr>(std::move(expr), std::move(index));
+    }
+    return expr;
 }
 
 std::vector<std::unique_ptr<Expr>> Parser::parseArguments() {

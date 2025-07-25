@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
             tokens.push_back(token);
             if (token.type == TokenType::EndOfInput) break;
         }
-
+        
         // Parse
         Parser parser(tokens);
         auto statements = parser.parse();

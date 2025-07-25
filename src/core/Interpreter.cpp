@@ -204,6 +204,33 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
             }
         }
         throw std::runtime_error("Only built-in functions supported are print() and range()");
+    } else if (auto e = dynamic_cast<const ListExpr*>(expr)) {
+        std::vector<ObjectPtr> items;
+        for (const auto& elem : e->elements)
+            items.push_back(eval(elem.get()));
+        return std::make_shared<ListObject>(items);
+    } else if (auto e = dynamic_cast<const IndexExpr*>(expr)) {
+        ObjectPtr collection = eval(e->collection.get());
+        ObjectPtr index = eval(e->index.get());
+        auto get_index = [&](int size) -> int {
+            if (auto num = std::dynamic_pointer_cast<NumberObject>(index)) {
+                int idx = static_cast<int>(num->value);
+                if (idx < 0) idx += size;
+                if (idx < 0 || idx >= size)
+                    throw std::runtime_error("Index out of range");
+                return idx;
+            }
+            throw std::runtime_error("Index must be a number");
+        };
+    
+        if (auto list = std::dynamic_pointer_cast<ListObject>(collection)) {
+            int idx = get_index(static_cast<int>(list->items.size()));
+            return list->items[idx];
+        } else if (auto str = std::dynamic_pointer_cast<StringObject>(collection)) {
+            int idx = get_index(static_cast<int>(str->value.size()));
+            return std::make_shared<StringObject>(std::string(1, str->value[idx]));
+        }
+        throw std::runtime_error("Object is not subscriptable");
     }
     throw std::runtime_error("Unknown expression type");
 }
