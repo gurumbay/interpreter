@@ -2,8 +2,8 @@
 #define PARSER_H
 #include <vector>
 #include <memory>
-#include "AST.h"
-#include "Token.h"
+#include "core/AST.h"
+#include "core/Token.h"
 
 class Parser {
 public:

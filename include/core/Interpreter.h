@@ -1,6 +1,6 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
-#include "AST.h"
+#include "core/AST.h"
 #include <unordered_map>
 #include <string>
 #include <variant>

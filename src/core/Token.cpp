@@ -1,4 +1,4 @@
-#include "Token.h"
+#include "core/Token.h"
 
 Token::Token(TokenType t, const std::string& txt)
 : type(t), text(txt), value(std::monostate{}) {}

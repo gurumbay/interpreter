@@ -4,10 +4,10 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include "Tokenizer.h"
-#include "Token.h"
-#include "Parser.h"
-#include "Interpreter.h"
+#include "core/Interpreter.h"
+#include "core/Parser.h"
+#include "core/Tokenizer.h"
+#include "core/Token.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

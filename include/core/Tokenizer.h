@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include "Token.h"
+#include "core/Token.h"
 
 class Tokenizer {
 public:

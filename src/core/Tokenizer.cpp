@@ -1,4 +1,5 @@
-#include "Tokenizer.h"
+#include "core/Tokenizer.h"
+#include "core/Token.h"
 #include <cctype>
 #include <stdexcept>
 #include <unordered_map>
