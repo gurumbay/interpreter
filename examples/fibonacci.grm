@@ -5,7 +5,7 @@ fib1 = 0
 fib2 = 1
 
 for i in range(1, n+1):
-    print(i, ")", fib1, "+", fib2, "\t->\t", fib2)
     fib_sum = fib1 + fib2
+    print(i, ")", fib1, "+", fib2, "\t->\t", fib_sum)
     fib1 = fib2
     fib2 = fib_sum
