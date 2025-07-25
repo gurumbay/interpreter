@@ -45,6 +45,25 @@ for k in range(10, 0, -2):
     print("k =", k)
 print("------------------------------\n")
 
+print("========== Break and Continue Demo ==========")
+print("Demo: break in while loop")
+i = 0
+while i < 10:
+    if i == 3:
+        print("Breaking at i =", i)
+        break
+    print("i =", i)
+    i = i + 1
+print("After break in while loop\n")
+
+print("Demo: continue in for loop")
+for j in range(5):
+    if j == 2:
+        print("Continuing at j =", j)
+        continue
+    print("j =", j)
+print("After continue in for loop\n")
+
 print("========== Nested Loops and Arithmetic ==========")
 print("Multiplication table (1 to 3):")
 for x in range(1, 4):

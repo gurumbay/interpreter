@@ -18,6 +18,8 @@ void Interpreter::visit(const Stmt* stmt) {
     else if (auto s = dynamic_cast<const WhileStmt*>(stmt)) visitWhileStmt(s);
     else if (auto s = dynamic_cast<const ForStmt*>(stmt)) visitForStmt(s);
     else if (auto s = dynamic_cast<const BlockStmt*>(stmt)) visitBlockStmt(s);
+    else if (auto s = dynamic_cast<const BreakStmt*>(stmt)) throw BreakException();
+    else if (auto s = dynamic_cast<const ContinueStmt*>(stmt)) throw ContinueException();
     else throw std::runtime_error("Unknown statement type");
 }
 
@@ -51,7 +53,13 @@ void Interpreter::visitWhileStmt(const WhileStmt* stmt) {
         else if (std::holds_alternative<std::string>(cond)) condVal = !std::get<std::string>(cond).empty();
         else throw std::runtime_error("Invalid condition in while");
         if (!condVal) break;
-        for (const auto& s : stmt->body) visit(s.get());
+        try {
+            for (const auto& s : stmt->body) visit(s.get());
+        } catch (const BreakException&) {
+            break;
+        } catch (const ContinueException&) {
+            continue;
+        }
     }
 }
 
@@ -89,12 +97,24 @@ void Interpreter::visitForStmt(const ForStmt* stmt) {
                 if (step > 0) {
                     for (double i = start; i < stop; i += step) {
                         m_env[stmt->var] = i;
-                        for (const auto& s : stmt->body) visit(s.get());
+                        try {
+                            for (const auto& s : stmt->body) visit(s.get());
+                        } catch (const BreakException&) {
+                            break;
+                        } catch (const ContinueException&) {
+                            continue;
+                        }
                     }
                 } else {
                     for (double i = start; i > stop; i += step) {
                         m_env[stmt->var] = i;
-                        for (const auto& s : stmt->body) visit(s.get());
+                        try {
+                            for (const auto& s : stmt->body) visit(s.get());
+                        } catch (const BreakException&) {
+                            break;
+                        } catch (const ContinueException&) {
+                            continue;
+                        }
                     }
                 }
                 return;

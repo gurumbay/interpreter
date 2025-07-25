@@ -8,6 +8,13 @@
 #include <vector>
 #include <iostream>
 
+class BreakException : public std::exception {
+    const char* what() const noexcept override { return "Break"; }
+};
+class ContinueException : public std::exception {
+    const char* what() const noexcept override { return "Continue"; }
+};
+
 class Interpreter {
 public:
     Interpreter();

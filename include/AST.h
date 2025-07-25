@@ -109,4 +109,12 @@ struct BlockStmt : Stmt {
         : statements(std::move(stmts)) {}
 };
 
+struct BreakStmt : Stmt {
+    BreakStmt() = default;
+};
+
+struct ContinueStmt : Stmt {
+    ContinueStmt() = default;
+};
+
 #endif // AST_H

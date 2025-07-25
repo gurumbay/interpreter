@@ -49,6 +49,8 @@ std::unique_ptr<Stmt> Parser::parseStatement() {
     if (check(TokenType::Identifier) && (m_current + 1 < m_tokens.size()) && m_tokens[m_current+1].type == TokenType::Assign) {
         return parseAssignment();
     }
+    if (match(TokenType::Break)) return std::make_unique<BreakStmt>();
+    if (match(TokenType::Continue)) return std::make_unique<ContinueStmt>();
     return parseExpressionStatement();
 }
 
