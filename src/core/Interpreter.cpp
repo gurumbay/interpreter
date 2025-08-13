@@ -108,6 +108,7 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
         ObjectPtr left = eval(e->left.get());
         ObjectPtr right = eval(e->right.get());
         const std::string& op = e->op;
+
         if (auto lnum = std::dynamic_pointer_cast<NumberObject>(left)) {
             if (auto rnum = std::dynamic_pointer_cast<NumberObject>(right)) {
                 double l = lnum->value, r = rnum->value;
@@ -122,6 +123,7 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
                 if (op == ">") return std::make_shared<NumberObject>(l > r ? 1.0 : 0.0);
                 if (op == "<=") return std::make_shared<NumberObject>(l <= r ? 1.0 : 0.0);
                 if (op == ">=") return std::make_shared<NumberObject>(l >= r ? 1.0 : 0.0);
+                if (op == "**") return std::make_shared<NumberObject>(std::pow(l, r));
                 if (op == "and") return std::make_shared<NumberObject>((l && r) ? 1.0 : 0.0);
                 if (op == "or") return std::make_shared<NumberObject>((l || r) ? 1.0 : 0.0);
                 throw std::runtime_error("Unsupported binary operator for numbers: " + op);
@@ -154,7 +156,7 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
         m_env[e->name] = val;
         return val;
     } else if (auto e = dynamic_cast<const CallExpr*>(expr)) {
-        // Only support print and range as built-ins for now
+        // Handle built-in functions first
         if (auto var = dynamic_cast<const VariableExpr*>(e->callee.get())) {
             if (var->name == "print") {
                 bool first = true;
@@ -203,7 +205,27 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
                 return std::make_shared<RangeObject>(start, stop, step);
             }
         }
+        
+        // For other function calls, evaluate the callee first
+        ObjectPtr callee = eval(e->callee.get());
+        
+        // For now, only built-in functions are supported
         throw std::runtime_error("Only built-in functions supported are print() and range()");
+    } else if (auto e = dynamic_cast<const MemberAccessExpr*>(expr)) {
+        ObjectPtr object = eval(e->object.get());
+        
+        // For now, we'll support basic member access on strings and lists
+        if (auto str = std::dynamic_pointer_cast<StringObject>(object)) {
+            if (e->member == "length") {
+                return std::make_shared<NumberObject>(static_cast<double>(str->value.length()));
+            }
+        } else if (auto list = std::dynamic_pointer_cast<ListObject>(object)) {
+            if (e->member == "length") {
+                return std::make_shared<NumberObject>(static_cast<double>(list->items.size()));
+            }
+        }
+        
+        throw std::runtime_error("Member '" + e->member + "' not found on object");
     } else if (auto e = dynamic_cast<const ListExpr*>(expr)) {
         std::vector<ObjectPtr> items;
         for (const auto& elem : e->elements)

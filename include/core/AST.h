@@ -71,6 +71,13 @@ struct CallExpr : Expr {
         : callee(std::move(c)), arguments(std::move(args)) {}
 };
 
+struct MemberAccessExpr : Expr {
+    std::unique_ptr<Expr> object;
+    std::string member;
+    MemberAccessExpr(std::unique_ptr<Expr> obj, const std::string& mem)
+        : object(std::move(obj)), member(mem) {}
+};
+
 // --- Statement base ---
 struct Stmt {
     virtual ~Stmt() = default;

@@ -2,6 +2,7 @@
 #define PARSER_H
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include "core/AST.h"
 #include "core/Token.h"
 
@@ -12,6 +13,18 @@ public:
     std::vector<std::unique_ptr<Stmt>> parse();
 
 private:
+    // Pratt parser function types
+    using PrefixParseFn = std::unique_ptr<Expr> (Parser::*)();
+    using InfixParseFn = std::unique_ptr<Expr> (Parser::*)(std::unique_ptr<Expr>);
+    
+    struct ParseRule {
+        PrefixParseFn prefix;
+        InfixParseFn infix;
+        int precedence;
+    };
+    
+    static const std::unordered_map<TokenType, ParseRule> s_parseRules;
+    
     const std::vector<Token>& m_tokens;
     size_t m_current;
 
@@ -21,15 +34,27 @@ private:
     std::unique_ptr<Stmt> parseWhile();
     std::unique_ptr<Stmt> parseFor();
     std::unique_ptr<Stmt> parseBlock();
-    std::unique_ptr<Stmt> parseAssignment();
     std::unique_ptr<Stmt> parseExpressionStatement();
+    std::unique_ptr<Stmt> parseAssignment();
 
-    // Expression parsing
-    std::unique_ptr<Expr> parseExpression();
-    std::unique_ptr<Expr> parseAssignmentExpr();
-    std::unique_ptr<Expr> parseBinaryExpr(int precedence = 0);
-    std::unique_ptr<Expr> parseUnaryExpr();
-    std::unique_ptr<Expr> parsePrimary();
+    // Expression parsing with Pratt parser
+    std::unique_ptr<Expr> parseExpression(int precedence = 0);
+    std::unique_ptr<Expr> parsePrecedence();
+    
+    // Prefix parsers
+    std::unique_ptr<Expr> parseNumber();
+    std::unique_ptr<Expr> parseString();
+    std::unique_ptr<Expr> parseVariable();
+    std::unique_ptr<Expr> parseGrouping();
+    std::unique_ptr<Expr> parseList();
+    std::unique_ptr<Expr> parseUnary();
+    
+    // Infix parsers
+    std::unique_ptr<Expr> parseBinary(std::unique_ptr<Expr> left);
+    std::unique_ptr<Expr> parseCall(std::unique_ptr<Expr> left);
+    std::unique_ptr<Expr> parseIndex(std::unique_ptr<Expr> left);
+    std::unique_ptr<Expr> parseMemberAccess(std::unique_ptr<Expr> left);
+    
     std::vector<std::unique_ptr<Expr>> parseArguments();
 
     // Helpers
@@ -39,7 +64,7 @@ private:
     const Token& peek() const;
     const Token& previous() const;
     bool isAtEnd() const;
-    void synchronize();
+    int getPrecedence(TokenType type) const;
 };
 
 #endif // PARSER_H

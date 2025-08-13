@@ -1,4 +1,4 @@
-n = 10000
+n = 10
 print("First", n, "Fibonacci numbers:")
 
 fib1 = 0

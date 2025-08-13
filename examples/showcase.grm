@@ -16,7 +16,25 @@ print("10 % 3 =", 10 % 3)          # 1 (modulo)
 print("-(5 - 10) =", -(5 - 10))    # 5 (unary minus)
 
 # --------------------------
-# 2. VARIABLES AND ASSIGNMENT
+# 2. ADVANCED OPERATOR PRECEDENCE
+# --------------------------
+print("\n=== ADVANCED OPERATOR PRECEDENCE ===")
+
+# Power operator precedence and right associativity
+print("2 + 3 * 4**2 =", 2 + 3 * 4**2)      # 50 (2 + 3 * 16)
+print("2**3**2 =", 2**3**2)                 # 512 (2**(3**2))
+print("(2**3)**2 =", (2**3)**2)             # 64 ((8)**2)
+
+# Complex precedence combinations
+print("1 + 2 * 3**2 - 4 / 2 =", 1 + 2 * 3**2 - 4 / 2)  # 17 (1 + 18 - 2)
+
+# Unary operators with proper precedence
+print("-2 * 3 =", -2 * 3)                   # -6
+print("not 0 =", not 0)                     # 1 (true)
+print("not 1 =", not 1)                     # 0 (false)
+
+# --------------------------
+# 3. VARIABLES AND ASSIGNMENT
 # --------------------------
 print("\n=== VARIABLES ===")
 x = 10
@@ -32,7 +50,7 @@ z = x + " " + y
 print(z)                  # String concatenation
 
 # --------------------------
-# 3. COMPARISONS AND LOGIC
+# 4. COMPARISONS AND LOGIC
 # --------------------------
 print("\n=== COMPARISONS ===")
 print("5 > 3:", 5 > 3)      # 1.0 (true)
@@ -42,8 +60,14 @@ print("not 0:", not 0)      # 1.0 (true)
 print("1 and 0:", 1 and 0)  # 0.0 (false)
 print("1 or 0:", 1 or 0)    # 1.0 (true)
 
+# Advanced logical precedence
+print("1 + 2 == 3:", 1 + 2 == 3)        # 1.0 (true)
+print("1 + 2 < 3 * 2:", 1 + 2 < 3 * 2)  # 1.0 (true, 3 < 6)
+print("1 and 0 or 1:", 1 and 0 or 1)    # 1.0 (true)
+print("0 or 1 and 0:", 0 or 1 and 0)    # 0.0 (false)
+
 # --------------------------
-# 4. CONDITIONALS (IF-ELSE)
+# 5. CONDITIONALS (IF-ELSE)
 # --------------------------
 print("\n=== CONDITIONALS ===")
 a = 10
@@ -64,8 +88,16 @@ if a > 5:
     if b > 10:
         print("Both conditions true")
 
+# Complex conditional with precedence
+c = 7
+if c > 5 and c < 10:
+    print("c is between 5 and 10")
+
+if not (c < 5):
+    print("c is not less than 5")
+
 # --------------------------
-# 5. WHILE LOOPS
+# 6. WHILE LOOPS
 # --------------------------
 print("\n=== WHILE LOOPS ===")
 counter = 3
@@ -85,7 +117,7 @@ while i < 5:
     print(i)
 
 # --------------------------
-# 6. FOR LOOPS WITH RANGE
+# 7. FOR LOOPS WITH RANGE
 # --------------------------
 print("\n=== FOR LOOPS ===")
 # Basic range
@@ -113,10 +145,47 @@ for i in range(10):
     print(i)
 
 # --------------------------
-# 7. STRING OPERATIONS
+# 8. STRING OPERATIONS
 # --------------------------
 print("\n=== STRING OPERATIONS ===")
 s1 = "Hello"
 s2 = "Gurumbay"
 print(s1 + " " + s2)      # Concatenation
 print(s1[0])              # Indexing: 'H'
+
+# --------------------------
+# 9. LISTS AND MEMBER ACCESS
+# --------------------------
+print("\n=== LISTS AND MEMBER ACCESS ===")
+numbers = [1, 2, 3, 4, 5]
+print("numbers =", numbers)
+print("numbers[2] =", numbers[2])        # Indexing: 3
+print("numbers.length =", numbers.length) # Member access: 5
+
+# String member access
+text = "Hello World"
+print("text =", text)
+print("text.length =", text.length)      # Member access: 11
+
+# --------------------------
+# 10. COMPLEX EXPRESSIONS WITH PROPER PRECEDENCE
+# --------------------------
+print("\n=== COMPLEX EXPRESSIONS ===")
+
+# Test all precedence levels working together
+complex1 = 1 + 2 * 3**2 - 4 / 2
+print("1 + 2 * 3**2 - 4 / 2 =", complex1)  # 17 (1 + 18 - 2)
+
+# Test parentheses override precedence
+complex2 = (1 + 2) * 3
+print("(1 + 2) * 3 =", complex2)  # 9 (3 * 3)
+
+# Test logical precedence with arithmetic
+complex3 = 5 > 3 and 2 < 4
+print("5 > 3 and 2 < 4 =", complex3)  # 1 (true)
+
+# Test unary with binary
+complex4 = -2 * 3 + 1
+print("-2 * 3 + 1 =", complex4)  # -5 (-6 + 1)
+
+print("\n=== SHOWCASE COMPLETED SUCCESSFULLY ===")
