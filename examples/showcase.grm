@@ -1,191 +1,353 @@
 # =============================================
-# DEMONSTRATION OF INTERPRETER CAPABILITIES
-# Matches exactly what the C++ interpreter supports
+# COMPREHENSIVE INTERPRETER SHOWCASE
+# Demonstrates all C++ interpreter capabilities
 # =============================================
 
-# --------------------------
-# 1. BASIC OUTPUT AND MATH
-# --------------------------
-print("=== BASIC OUTPUT AND MATH ===")
+print("=== C++ INTERPRETER COMPREHENSIVE SHOWCASE ===")
+print("This showcase demonstrates all supported features\n")
 
-print("Hello, world!!!\n")
+# =============================================
+# 1. LITERALS AND BASIC TYPES
+# =============================================
+print("=== 1. LITERALS AND BASIC TYPES ===")
 
-print("1 + 2 * 3 =", 1 + 2 * 3)    # 7
-print("10 - 5 / 2 =", 10 - 5 / 2)  # 7.5
-print("10 % 3 =", 10 % 3)          # 1 (modulo)
-print("-(5 - 10) =", -(5 - 10))    # 5 (unary minus)
+# Numbers (floating point)
+print("Numbers:")
+print("  Integer: 42 =", 42)
+print("  Float: 3.14 =", 3.14)
+print("  Negative: -17 =", -17)
+print("  Zero: 0 =", 0)
 
-# --------------------------
-# 2. ADVANCED OPERATOR PRECEDENCE
-# --------------------------
-print("\n=== ADVANCED OPERATOR PRECEDENCE ===")
+# Strings
+print("\nStrings:")
+print("  Simple: 'Hello' =", "Hello")
+print("  With spaces: 'Hello World' =", "Hello World")
+print("  Empty: '' =", "")
 
-# Power operator precedence and right associativity
-print("2 + 3 * 4**2 =", 2 + 3 * 4**2)      # 50 (2 + 3 * 16)
-print("2**3**2 =", 2**3**2)                 # 512 (2**(3**2))
-print("(2**3)**2 =", (2**3)**2)             # 64 ((8)**2)
+# =============================================
+# 2. ARITHMETIC OPERATIONS
+# =============================================
+print("\n=== 2. ARITHMETIC OPERATIONS ===")
 
-# Complex precedence combinations
-print("1 + 2 * 3**2 - 4 / 2 =", 1 + 2 * 3**2 - 4 / 2)  # 17 (1 + 18 - 2)
+# Basic arithmetic
+print("Basic arithmetic:")
+print("  5 + 3 =", 5 + 3)
+print("  10 - 4 =", 10 - 4)
+print("  6 * 7 =", 6 * 7)
+print("  15 / 3 =", 15 / 3)
+print("  17 % 5 =", 17 % 5)
 
-# Unary operators with proper precedence
-print("-2 * 3 =", -2 * 3)                   # -6
-print("not 0 =", not 0)                     # 1 (true)
-print("not 1 =", not 1)                     # 0 (false)
+# Power operator
+print("\nPower operator:")
+print("  2 ** 3 =", 2 ** 3)
+print("  5 ** 2 =", 5 ** 2)
+print("  2 ** 0 =", 2 ** 0)
 
-# --------------------------
-# 3. VARIABLES AND ASSIGNMENT
-# --------------------------
-print("\n=== VARIABLES ===")
+# Unary operators
+print("\nUnary operators:")
+print("  -5 =", -5)
+print("  -(-3) =", -(-3))
+
+# =============================================
+# 3. OPERATOR PRECEDENCE AND ASSOCIATIVITY
+# =============================================
+print("\n=== 3. OPERATOR PRECEDENCE AND ASSOCIATIVITY ===")
+
+print("Precedence examples:")
+print("  1 + 2 * 3 =", 1 + 2 * 3, "(multiplication before addition)")
+print("  (1 + 2) * 3 =", (1 + 2) * 3, "(parentheses override precedence)")
+print("  2 ** 3 ** 2 =", 2 ** 3 ** 2, "(right associative)")
+print("  (2 ** 3) ** 2 =", (2 ** 3) ** 2, "(parentheses change associativity)")
+
+print("\nComplex precedence:")
+print("  1 + 2 * 3**2 - 4 / 2 =", 1 + 2 * 3**2 - 4 / 2)
+print("  -2 * 3 + 1 =", -2 * 3 + 1)
+
+# =============================================
+# 4. COMPARISON OPERATORS
+# =============================================
+print("\n=== 4. COMPARISON OPERATORS ===")
+
+print("Numeric comparisons:")
+print("  5 > 3 =", 5 > 3)
+print("  5 < 3 =", 5 < 3)
+print("  5 >= 5 =", 5 >= 5)
+print("  5 <= 3 =", 5 <= 3)
+print("  5 == 5 =", 5 == 5)
+print("  5 != 3 =", 5 != 3)
+
+# =============================================
+# 5. LOGICAL OPERATORS
+# =============================================
+print("\n=== 5. LOGICAL OPERATORS ===")
+
+print("Logical operators:")
+print("  not 0 =", not 0, "(not false)")
+print("  not 1 =", not 1, "(not true)")
+print("  1 and 0 =", 1 and 0, "(true and false)")
+print("  1 or 0 =", 1 or 0, "(true or false)")
+print("  0 and 1 =", 0 and 1, "(false and true)")
+print("  0 or 1 =", 0 or 1, "(false or true)")
+
+print("\nLogical precedence:")
+print("  1 and 0 or 1 =", 1 and 0 or 1, "(and before or)")
+print("  0 or 1 and 0 =", 0 or 1 and 0, "(and before or)")
+
+# =============================================
+# 6. VARIABLES AND ASSIGNMENT
+# =============================================
+print("\n=== 6. VARIABLES AND ASSIGNMENT ===")
+
+# Variable creation and assignment
+print("Variable operations:")
 x = 10
-y = 3
-z = x * y
-print("x =", x)
-print("y =", y)
-print("z = x * y =", z)   # 30
+print("  x = 10, x =", x)
 
-x = "String"
-y = "concatenation"
-z = x + " " + y
-print(z)                  # String concatenation
+y = "Hello"
+print("  y = 'Hello', y =", y)
 
-# --------------------------
-# 4. COMPARISONS AND LOGIC
-# --------------------------
-print("\n=== COMPARISONS ===")
-print("5 > 3:", 5 > 3)      # 1.0 (true)
-print("5 == 3:", 5 == 3)    # 0.0 (false)
-print("5 != 3:", 5 != 3)    # 1.0 (true)
-print("not 0:", not 0)      # 1.0 (true)
-print("1 and 0:", 1 and 0)  # 0.0 (false)
-print("1 or 0:", 1 or 0)    # 1.0 (true)
+# Reassignment
+x = 20
+print("  x = 20, x =", x)
 
-# Advanced logical precedence
-print("1 + 2 == 3:", 1 + 2 == 3)        # 1.0 (true)
-print("1 + 2 < 3 * 2:", 1 + 2 < 3 * 2)  # 1.0 (true, 3 < 6)
-print("1 and 0 or 1:", 1 and 0 or 1)    # 1.0 (true)
-print("0 or 1 and 0:", 0 or 1 and 0)    # 0.0 (false)
+# Expression assignment
+z = x + 5
+print("  z = x + 5, z =", z)
 
-# --------------------------
-# 5. CONDITIONALS (IF-ELSE)
-# --------------------------
-print("\n=== CONDITIONALS ===")
+# =============================================
+# 7. STRING OPERATIONS
+# =============================================
+print("\n=== 7. STRING OPERATIONS ===")
+
+print("String concatenation:")
+s1 = "Hello"
+s2 = "World"
+print("  s1 =", s1)
+print("  s2 =", s2)
+print("  s1 + ' ' + s2 =", s1 + " " + s2)
+
+print("\nString indexing:")
+text = "Python"
+print("  text =", text)
+print("  text[0] =", text[0], "(first character)")
+print("  text[2] =", text[2], "(third character)")
+
+print("\nString length:")
+print("  len(text) =", len(text))
+print("  text.length =", text.length)
+
+# =============================================
+# 8. LISTS
+# =============================================
+print("\n=== 8. LISTS ===")
+
+print("List creation and access:")
+numbers = [1, 2, 3, 4, 5]
+print("  numbers =", numbers, "([1, 2, 3, 4, 5])")
+print("  numbers[0] =", numbers[0], "(first element)")
+print("  numbers[2] =", numbers[2], "(third element)")
+
+print("\nList length:")
+print("  len(numbers) =", len(numbers))
+print("  numbers.length =", numbers.length)
+
+# =============================================
+# 9. CONDITIONAL STATEMENTS (IF-ELSE)
+# =============================================
+print("\n=== 9. CONDITIONAL STATEMENTS ===")
+
+print("Simple if-else:")
 a = 10
-print("a =", a)
 if a > 5:
-    print("a is greater than 5")
+    print("  a is greater than 5")
 else:
-    print("a is 5 or less")
+    print("  a is 5 or less")
 
+print("\nIf with false condition:")
+if 0:
+    print("  This won't print")
+else:
+    print("  0 is falsy")
+
+print("\nString truthiness:")
 if "":
-    print("This won't print")
+    print("  This won't print")
 else:
-    print("Empty string is false")
+    print("  Empty string is falsy")
 
-# Nested if
+if "hello":
+    print("  Non-empty string is truthy")
+
+print("\nNested if statements:")
 b = 15
 if a > 5:
     if b > 10:
-        print("Both conditions true")
+        print("  Both conditions are true")
 
-# Complex conditional with precedence
+print("\nComplex conditions:")
 c = 7
 if c > 5 and c < 10:
-    print("c is between 5 and 10")
+    print("  c is between 5 and 10")
 
 if not (c < 5):
-    print("c is not less than 5")
+    print("  c is not less than 5")
 
-# --------------------------
-# 6. WHILE LOOPS
-# --------------------------
-print("\n=== WHILE LOOPS ===")
+# =============================================
+# 10. WHILE LOOPS
+# =============================================
+print("\n=== 10. WHILE LOOPS ===")
+
+print("Basic while loop:")
 counter = 3
 while counter > 0:
-    print(counter)
+    print("  Counter:", counter)
     counter = counter - 1
 
-# With break/continue
-print("\nWhile with break/continue:")
+print("\nWhile loop with break:")
 i = 0
 while i < 5:
     i = i + 1
-    if i == 2:
-        continue
-    if i == 4:
+    if i == 3:
+        print("  Breaking at i =", i)
         break
-    print(i)
+    print("  i =", i)
 
-# --------------------------
-# 7. FOR LOOPS WITH RANGE
-# --------------------------
-print("\n=== FOR LOOPS ===")
-# Basic range
-print("range(5):")
+print("\nWhile loop with continue:")
+j = 0
+while j < 5:
+    j = j + 1
+    if j == 2:
+        continue
+    print("  j =", j)
+
+# =============================================
+# 11. FOR LOOPS WITH RANGE
+# =============================================
+print("\n=== 11. FOR LOOPS WITH RANGE ===")
+
+print("Basic range:")
+print("  range(5):")
 for i in range(5):
-    print(i)
+    print("    i =", i)
 
-# Range with start/stop
-print("\nrange(2, 5):")
+print("\nRange with start and stop:")
+print("  range(2, 5):")
 for i in range(2, 5):
-    print(i)
+    print("    i =", i)
 
-# Range with step
-print("\nrange(0, 10, 2):")
+print("\nRange with step:")
+print("  range(0, 10, 2):")
 for i in range(0, 10, 2):
-    print(i)
+    print("    i =", i)
 
-# With break/continue
-print("\nFor with break/continue:")
+print("\nRange with negative step:")
+print("  range(5, 0, -1):")
+for i in range(5, 0, -1):
+    print("    i =", i)
+
+print("\nFor loop with break:")
 for i in range(10):
+    if i > 5:
+        print("  Breaking at i =", i)
+        break
+    print("  i =", i)
+
+print("\nFor loop with continue:")
+for i in range(5):
     if i % 2 == 0:
         continue
-    if i > 7:
-        break
-    print(i)
+    print("  Odd i =", i)
 
-# --------------------------
-# 8. STRING OPERATIONS
-# --------------------------
-print("\n=== STRING OPERATIONS ===")
-s1 = "Hello"
-s2 = "Gurumbay"
-print(s1 + " " + s2)      # Concatenation
-print(s1[0])              # Indexing: 'H'
+# =============================================
+# 12. FOR LOOPS WITH STRINGS AND LISTS
+# =============================================
+print("\n=== 12. FOR LOOPS WITH STRINGS AND LISTS ===")
 
-# --------------------------
-# 9. LISTS AND MEMBER ACCESS
-# --------------------------
-print("\n=== LISTS AND MEMBER ACCESS ===")
-numbers = [1, 2, 3, 4, 5]
-print("numbers =", numbers)
-print("numbers[2] =", numbers[2])        # Indexing: 3
-print("numbers.length =", numbers.length) # Member access: 5
+print("Iterating over string:")
+word = "Hello"
+for char in word:
+    print("  char =", char)
 
-# String member access
-text = "Hello World"
-print("text =", text)
-print("text.length =", text.length)      # Member access: 11
+print("\nIterating over list:")
+items = [10, 20, 30]
+for item in items:
+    print("  item =", item)
 
-# --------------------------
-# 10. COMPLEX EXPRESSIONS WITH PROPER PRECEDENCE
-# --------------------------
-print("\n=== COMPLEX EXPRESSIONS ===")
+# =============================================
+# 13. BUILT-IN FUNCTIONS
+# =============================================
+print("\n=== 13. BUILT-IN FUNCTIONS ===")
 
-# Test all precedence levels working together
-complex1 = 1 + 2 * 3**2 - 4 / 2
-print("1 + 2 * 3**2 - 4 / 2 =", complex1)  # 17 (1 + 18 - 2)
+print("print() function:")
+print("  print() can take multiple arguments")
+print("  print() can print numbers:", 42)
+print("  print() can print strings:", "hello")
 
-# Test parentheses override precedence
-complex2 = (1 + 2) * 3
-print("(1 + 2) * 3 =", complex2)  # 9 (3 * 3)
+print("\nlen() function:")
+print("  len('hello') =", len("hello"))
+print("  len([1, 2, 3]) =", len([1, 2, 3]))
 
-# Test logical precedence with arithmetic
-complex3 = 5 > 3 and 2 < 4
-print("5 > 3 and 2 < 4 =", complex3)  # 1 (true)
+print("\nrange() function:")
+print("  range(3) =", range(3))
+print("  range(1, 4) =", range(1, 4))
+print("  range(0, 6, 2) =", range(0, 6, 2))
 
-# Test unary with binary
-complex4 = -2 * 3 + 1
-print("-2 * 3 + 1 =", complex4)  # -5 (-6 + 1)
+# =============================================
+# 14. COMPLEX EXPRESSIONS AND PRECEDENCE
+# =============================================
+print("\n=== 14. COMPLEX EXPRESSIONS AND PRECEDENCE ===")
 
-print("\n=== SHOWCASE COMPLETED SUCCESSFULLY ===")
+print("All operators working together:")
+result1 = 1 + 2 * 3**2 - 4 / 2
+print("  1 + 2 * 3**2 - 4 / 2 =", result1)
+
+print("\nParentheses override precedence:")
+result2 = (1 + 2) * 3
+print("  (1 + 2) * 3 =", result2)
+
+print("\nLogical with arithmetic:")
+result3 = 5 > 3 and 2 < 4
+print("  5 > 3 and 2 < 4 =", result3)
+
+print("\nUnary with binary:")
+result4 = -2 * 3 + 1
+print("  -2 * 3 + 1 =", result4)
+
+# =============================================
+# 15. PERFORMANCE AND COMPLEXITY
+# =============================================
+print("\n=== 15. PERFORMANCE AND COMPLEXITY ===")
+
+print("Nested loops:")
+for i in range(3):
+    for j in range(3):
+        print("  i =", i, "j =", j)
+
+print("\nComplex nested conditions:")
+x = 5
+y = 10
+z = 15
+if x > 0 and y > 5 or z < 20:
+    print("  Complex condition is true")
+
+# =============================================
+# SUMMARY
+# =============================================
+print("\n=== SUMMARY ===")
+print("All basic types: numbers, strings")
+print("All arithmetic operators: +, -, *, /, %, **")
+print("All comparison operators: ==, !=, <, <=, >, >=")
+print("All logical operators: and, or, not")
+print("Unary operators: -")
+print("Variables and assignment")
+print("String operations: concatenation, indexing, length")
+print("Lists: creation, indexing, length")
+print("Conditional statements: if-else")
+print("Loops: while, for with range, strings, lists")
+print("Control flow: break, continue")
+print("Built-in functions: print(), len(), range()")
+print("Operator precedence and associativity")
+print("Nested structures and complex expressions")
+
+print("\nINTERPRETER SHOWCASE COMPLETED SUCCESSFULLY!")
+print("The interpreter supports almost all core Python-like features!")

@@ -1,0 +1,59 @@
+# Test file for functions and scopes
+
+# Define a simple function
+def add(a, b):
+    return a + b
+
+
+# Define a function with local variables
+def factorial(n):
+    if n <= 1:
+        return 1
+    else:
+        return n * factorial(n - 1)
+
+# Define a function that uses global variables
+x = 10
+def multiply_by_x(y):
+    return x * y
+
+# Test function calls
+print("Testing add function:")
+result = add(5, 3)
+print("5 + 3 =", result)
+
+print("Testing factorial function:")
+fact5 = factorial(5)
+print("factorial(5) =", fact5)
+
+print("Testing function with global variable:")
+mult_result = multiply_by_x(7)
+print("multiply_by_x(7) =", mult_result)
+
+# Test scope isolation
+def test_scope():
+    local_var = 42
+    print("Inside function, local_var =", local_var)
+
+test_scope()
+# This would cause an error
+#print("Outside function, local_var =", local_var)
+
+# Test built-in functions
+print("Testing built-in functions:")
+print("len('hello') =", len("hello"))
+print("len([1, 2, 3, 4, 5]) =", len([1, 2, 3, 4, 5]))
+
+# Test nested scopes
+outer_var = 100
+def outer_function():
+    inner_var = 200
+    print("Outer function - outer_var:", outer_var, "inner_var:", inner_var)
+    
+    def inner_function():
+        innermost_var = 300
+        print("Inner function - outer_var:", outer_var, "inner_var:", inner_var, "innermost_var:", innermost_var)
+    
+    inner_function()
+
+outer_function()
