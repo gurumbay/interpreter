@@ -1,8 +1,9 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include <vector>
+
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include "core/AST.h"
 #include "core/Token.h"
 
@@ -30,12 +31,14 @@ private:
 
     // Statement parsing
     std::unique_ptr<Stmt> parseStatement();
+    std::unique_ptr<Stmt> parseFunctionDef();
     std::unique_ptr<Stmt> parseIf();
     std::unique_ptr<Stmt> parseWhile();
     std::unique_ptr<Stmt> parseFor();
     std::unique_ptr<Stmt> parseBlock();
     std::unique_ptr<Stmt> parseExpressionStatement();
     std::unique_ptr<Stmt> parseAssignment();
+    std::unique_ptr<Stmt> parseReturn();
 
     // Expression parsing with Pratt parser
     std::unique_ptr<Expr> parseExpression(int precedence = 0);
@@ -45,6 +48,8 @@ private:
     std::unique_ptr<Expr> parseNumber();
     std::unique_ptr<Expr> parseString();
     std::unique_ptr<Expr> parseVariable();
+    std::unique_ptr<Expr> parseBoolean();
+    std::unique_ptr<Expr> parseNone();
     std::unique_ptr<Expr> parseGrouping();
     std::unique_ptr<Expr> parseList();
     std::unique_ptr<Expr> parseUnary();
@@ -65,6 +70,7 @@ private:
     const Token& previous() const;
     bool isAtEnd() const;
     int getPrecedence(TokenType type) const;
+    void skipNewlines();
 };
 
 #endif // PARSER_H

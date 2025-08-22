@@ -1,14 +1,34 @@
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
-#include <cmath>
 #include "core/Interpreter.h"
 #include "objects/NumberObject.h"
 #include "objects/StringObject.h"
 #include "objects/ListObject.h"
 #include "objects/RangeObject.h"
 #include "objects/IteratorObject.h"
+#include "objects/FunctionObject.h"
 
-Interpreter::Interpreter() {}
+// Exception implementations
+const char* BreakException::what() const noexcept {
+    return "Break";
+}
+
+const char* ContinueException::what() const noexcept {
+    return "Continue";
+}
+
+ReturnException::ReturnException(ObjectPtr v) : value(v) {}
+
+const char* ReturnException::what() const noexcept {
+    return "Return";
+}
+
+Interpreter::Interpreter() {
+    m_global_env = std::make_shared<Environment>();
+    m_current_env = m_global_env;
+    setupBuiltinFunctions();
+}
 
 void Interpreter::run(const std::vector<std::unique_ptr<Stmt>>& statements) {
     for (const auto& stmt : statements) {
@@ -23,6 +43,8 @@ void Interpreter::visit(const Stmt* stmt) {
     else if (auto s = dynamic_cast<const WhileStmt*>(stmt)) visitWhileStmt(s);
     else if (auto s = dynamic_cast<const ForStmt*>(stmt)) visitForStmt(s);
     else if (auto s = dynamic_cast<const BlockStmt*>(stmt)) visitBlockStmt(s);
+    else if (auto s = dynamic_cast<const FunctionDefStmt*>(stmt)) visitFunctionDefStmt(s);
+    else if (auto s = dynamic_cast<const ReturnStmt*>(stmt)) visitReturnStmt(s);
     else if (auto s = dynamic_cast<const BreakStmt*>(stmt)) throw BreakException();
     else if (auto s = dynamic_cast<const ContinueStmt*>(stmt)) throw ContinueException();
     else throw std::runtime_error("Unknown statement type");
@@ -34,7 +56,7 @@ void Interpreter::visitExpressionStmt(const ExpressionStmt* stmt) {
 
 void Interpreter::visitAssignStmt(const AssignStmt* stmt) {
     ObjectPtr val = eval(stmt->value.get());
-    m_env[stmt->name] = val;
+    m_current_env->set(stmt->name, val);
 }
 
 void Interpreter::visitIfStmt(const IfStmt* stmt) {
@@ -71,7 +93,6 @@ void Interpreter::visitWhileStmt(const WhileStmt* stmt) {
 void Interpreter::visitForStmt(const ForStmt* stmt) {
     ObjectPtr iterable = eval(stmt->iterable.get());
     std::shared_ptr<IteratorObject> iterator;
-    // Try to get an iterator from the object
     if (auto range = std::dynamic_pointer_cast<RangeObject>(iterable)) {
         iterator = range->iter();
     } else if (auto str = std::dynamic_pointer_cast<StringObject>(iterable)) {
@@ -82,7 +103,7 @@ void Interpreter::visitForStmt(const ForStmt* stmt) {
         throw std::runtime_error("Object is not iterable");
     }
     while (iterator->has_next()) {
-        m_env[stmt->var] = iterator->next();
+        m_current_env->set(stmt->var, iterator->next());
         try {
             for (const auto& s : stmt->body) visit(s.get());
         } catch (const BreakException&) {
@@ -97,13 +118,32 @@ void Interpreter::visitBlockStmt(const BlockStmt* stmt) {
     for (const auto& s : stmt->statements) visit(s.get());
 }
 
+void Interpreter::visitFunctionDefStmt(const FunctionDefStmt* stmt) {
+    // Convert unique_ptr to raw pointers for function body
+    std::vector<const Stmt*> body_ptrs;
+    for (const auto& stmt_ptr : stmt->body) {
+        body_ptrs.push_back(stmt_ptr.get());
+    }
+    
+    auto function = std::make_shared<FunctionObject>(stmt->parameters, body_ptrs, m_current_env);
+    m_current_env->set(stmt->name, function);
+}
+
+void Interpreter::visitReturnStmt(const ReturnStmt* stmt) {
+    ObjectPtr value = nullptr;
+    if (stmt->value) {
+        value = eval(stmt->value.get());
+    } else {
+        value = std::make_shared<NumberObject>(0.0); // Default return value
+    }
+    throw ReturnException(value);
+}
+
 ObjectPtr Interpreter::eval(const Expr* expr) {
     if (auto e = dynamic_cast<const NumberExpr*>(expr)) return std::make_shared<NumberObject>(e->value);
     else if (auto e = dynamic_cast<const StringExpr*>(expr)) return std::make_shared<StringObject>(e->value);
     else if (auto e = dynamic_cast<const VariableExpr*>(expr)) {
-        auto it = m_env.find(e->name);
-        if (it == m_env.end()) throw std::runtime_error("Undefined variable: " + e->name);
-        return it->second;
+        return m_current_env->get(e->name);
     } else if (auto e = dynamic_cast<const BinaryExpr*>(expr)) {
         ObjectPtr left = eval(e->left.get());
         ObjectPtr right = eval(e->right.get());
@@ -153,64 +193,17 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
         throw std::runtime_error("Unknown unary operator: " + e->op);
     } else if (auto e = dynamic_cast<const AssignExpr*>(expr)) {
         ObjectPtr val = eval(e->value.get());
-        m_env[e->name] = val;
+        m_current_env->update(e->name, val);
         return val;
     } else if (auto e = dynamic_cast<const CallExpr*>(expr)) {
-        // Handle built-in functions first
-        if (auto var = dynamic_cast<const VariableExpr*>(e->callee.get())) {
-            if (var->name == "print") {
-                bool first = true;
-                for (const auto& arg : e->arguments) {
-                    ObjectPtr val = eval(arg.get());
-                    if (!first) std::cout << " ";
-                    first = false;
-                    if (auto num = std::dynamic_pointer_cast<NumberObject>(val)) {
-                        std::cout << num->value;
-                    } else if (auto str = std::dynamic_pointer_cast<StringObject>(val)) {
-                        std::cout << str->value;
-                    } else {
-                        std::cout << "<object>";
-                    }
-                }
-                std::cout << std::endl;
-                return std::make_shared<NumberObject>(0.0);
-            } else if (var->name == "range") {
-                size_t argc = e->arguments.size();
-                double start = 0, stop = 0, step = 1;
-                if (argc == 1) {
-                    ObjectPtr vstop = eval(e->arguments[0].get());
-                    if (auto n = std::dynamic_pointer_cast<NumberObject>(vstop)) stop = n->value;
-                    else throw std::runtime_error("range(stop) expects a number");
-                } else if (argc == 2) {
-                    ObjectPtr vstart = eval(e->arguments[0].get());
-                    ObjectPtr vstop = eval(e->arguments[1].get());
-                    if (auto n1 = std::dynamic_pointer_cast<NumberObject>(vstart)) start = n1->value;
-                    else throw std::runtime_error("range(start, stop) expects numbers");
-                    if (auto n2 = std::dynamic_pointer_cast<NumberObject>(vstop)) stop = n2->value;
-                    else throw std::runtime_error("range(start, stop) expects numbers");
-                } else if (argc == 3) {
-                    ObjectPtr vstart = eval(e->arguments[0].get());
-                    ObjectPtr vstop = eval(e->arguments[1].get());
-                    ObjectPtr vstep = eval(e->arguments[2].get());
-                    if (auto n1 = std::dynamic_pointer_cast<NumberObject>(vstart)) start = n1->value;
-                    else throw std::runtime_error("range(start, stop, step) expects numbers");
-                    if (auto n2 = std::dynamic_pointer_cast<NumberObject>(vstop)) stop = n2->value;
-                    else throw std::runtime_error("range(start, stop, step) expects numbers");
-                    if (auto n3 = std::dynamic_pointer_cast<NumberObject>(vstep)) step = n3->value;
-                    else throw std::runtime_error("range(start, stop, step) expects numbers");
-                    if (step == 0) throw std::runtime_error("range() step argument must not be zero");
-                } else {
-                    throw std::runtime_error("range() expects 1 to 3 arguments");
-                }
-                return std::make_shared<RangeObject>(start, stop, step);
-            }
-        }
-        
-        // For other function calls, evaluate the callee first
         ObjectPtr callee = eval(e->callee.get());
         
-        // For now, only built-in functions are supported
-        throw std::runtime_error("Only built-in functions supported are print() and range()");
+        std::vector<ObjectPtr> arguments;
+        for (const auto& arg : e->arguments) {
+            arguments.push_back(eval(arg.get()));
+        }
+        
+        return callFunction(callee, arguments);
     } else if (auto e = dynamic_cast<const MemberAccessExpr*>(expr)) {
         ObjectPtr object = eval(e->object.get());
         
@@ -255,4 +248,112 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
         throw std::runtime_error("Object is not subscriptable");
     }
     throw std::runtime_error("Unknown expression type");
+}
+
+void Interpreter::setupBuiltinFunctions() {
+    // Print function
+    auto print_func = [](const std::vector<ObjectPtr>& args) -> ObjectPtr {
+        bool first = true;
+        for (const auto& arg : args) {
+            if (!first) std::cout << " ";
+            first = false;
+            if (auto num = std::dynamic_pointer_cast<NumberObject>(arg)) {
+                std::cout << num->value;
+            } else if (auto str = std::dynamic_pointer_cast<StringObject>(arg)) {
+                std::cout << str->value;
+            } else {
+                std::cout << "<object>";
+            }
+        }
+        std::cout << std::endl;
+        return std::make_shared<NumberObject>(0.0);
+    };
+    
+    // Range function
+    auto range_func = [](const std::vector<ObjectPtr>& args) -> ObjectPtr {
+        size_t argc = args.size();
+        double start = 0, stop = 0, step = 1;
+        
+        if (argc == 1) {
+            if (auto n = std::dynamic_pointer_cast<NumberObject>(args[0])) stop = n->value;
+            else throw std::runtime_error("range(stop) expects a number");
+        } else if (argc == 2) {
+            if (auto n1 = std::dynamic_pointer_cast<NumberObject>(args[0])) start = n1->value;
+            else throw std::runtime_error("range(start, stop) expects numbers");
+            if (auto n2 = std::dynamic_pointer_cast<NumberObject>(args[1])) stop = n2->value;
+            else throw std::runtime_error("range(start, stop) expects numbers");
+        } else if (argc == 3) {
+            if (auto n1 = std::dynamic_pointer_cast<NumberObject>(args[0])) start = n1->value;
+            else throw std::runtime_error("range(start, stop, step) expects numbers");
+            if (auto n2 = std::dynamic_pointer_cast<NumberObject>(args[1])) stop = n2->value;
+            else throw std::runtime_error("range(start, stop, step) expects numbers");
+            if (auto n3 = std::dynamic_pointer_cast<NumberObject>(args[2])) step = n3->value;
+            else throw std::runtime_error("range(start, stop, step) expects numbers");
+            if (step == 0) throw std::runtime_error("range() step argument must not be zero");
+        } else {
+            throw std::runtime_error("range() expects 1 to 3 arguments");
+        }
+        return std::make_shared<RangeObject>(start, stop, step);
+    };
+    
+    // Len function
+    auto len_func = [](const std::vector<ObjectPtr>& args) -> ObjectPtr {
+        if (args.size() != 1) {
+            throw std::runtime_error("len() expects exactly 1 argument");
+        }
+        
+        if (auto str = std::dynamic_pointer_cast<StringObject>(args[0])) {
+            return std::make_shared<NumberObject>(static_cast<double>(str->value.length()));
+        } else if (auto list = std::dynamic_pointer_cast<ListObject>(args[0])) {
+            return std::make_shared<NumberObject>(static_cast<double>(list->items.size()));
+        } else {
+            throw std::runtime_error("len() expects a string or list");
+        }
+    };
+    
+    m_global_env->set("print", std::make_shared<FunctionObject>("print", print_func));
+    m_global_env->set("range", std::make_shared<FunctionObject>("range", range_func));
+    m_global_env->set("len", std::make_shared<FunctionObject>("len", len_func));
+}
+
+ObjectPtr Interpreter::callFunction(ObjectPtr callee, const std::vector<ObjectPtr>& arguments) {
+    if (auto func = std::dynamic_pointer_cast<FunctionObject>(callee)) {
+        if (func->get_type() == FunctionObject::FunctionType::BUILTIN) {
+            return func->get_builtin()(arguments);
+        } else {
+            // User-defined function
+            const auto& parameters = func->get_parameters();
+            if (arguments.size() != parameters.size()) {
+                throw std::runtime_error("Function expects " + std::to_string(parameters.size()) + 
+                                       " arguments, got " + std::to_string(arguments.size()));
+            }
+            
+            // Create new environment for function execution
+            auto function_env = std::make_shared<Environment>(func->get_closure());
+            
+            // Bind parameters
+            for (size_t i = 0; i < parameters.size(); ++i) {
+                function_env->set(parameters[i], arguments[i]);
+            }
+            
+            // Save current environment and switch to function environment
+            auto previous_env = m_current_env;
+            m_current_env = function_env;
+            
+                         try {
+                 // Execute function body
+                 for (const auto& stmt : func->get_body()) {
+                     visit(stmt);
+                 }
+                // If no return statement, return default value
+                m_current_env = previous_env;
+                return std::make_shared<NumberObject>(0.0);
+            } catch (const ReturnException& e) {
+                m_current_env = previous_env;
+                return e.value;
+            }
+        }
+    }
+    
+    throw std::runtime_error("Can only call functions");
 }

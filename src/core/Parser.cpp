@@ -20,6 +20,10 @@ const std::unordered_map<TokenType, Parser::ParseRule> Parser::s_parseRules = {
     {TokenType::String, {&Parser::parseString, nullptr, 0}},
     {TokenType::Identifier, {&Parser::parseVariable, nullptr, 0}},
 
+    {TokenType::True, {&Parser::parseBoolean, nullptr, 0}},
+    {TokenType::False, {&Parser::parseBoolean, nullptr, 0}},
+    {TokenType::None, {&Parser::parseNone, nullptr, 0}},
+
     // Grouping and function calls (highest postfix precedence)
     {TokenType::LeftParen, {&Parser::parseGrouping, &Parser::parseCall, 9}},
     {TokenType::LeftBracket, {&Parser::parseList, &Parser::parseIndex, 9}},
@@ -32,7 +36,7 @@ const std::unordered_map<TokenType, Parser::ParseRule> Parser::s_parseRules = {
     {TokenType::Minus, {&Parser::parseUnary, &Parser::parseBinary, 5}}, // unary '-', binary '-' (additive)
     {TokenType::Not, {&Parser::parseUnary, nullptr, 0}},
 
-    // Binary operators (in correct order of precedence)
+    // Binary operators
     {TokenType::Power, {nullptr, &Parser::parseBinary, 8}},      // ** (right associative)
     {TokenType::Star, {nullptr, &Parser::parseBinary, 6}},       // *
     {TokenType::Slash, {nullptr, &Parser::parseBinary, 6}},      // /
@@ -59,10 +63,9 @@ Parser::Parser(const std::vector<Token>& tokens)
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!isAtEnd()) {
-        if (check(TokenType::Newline)) { advance(); continue; }
+        skipNewlines();
         auto stmt = parseStatement();
         if (stmt) statements.push_back(std::move(stmt));
-        // Consume statement separator
         if (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
     }
     return statements;
@@ -70,11 +73,13 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse() {
 
 // --- Statement parsing ---
 std::unique_ptr<Stmt> Parser::parseStatement() {
+    if (match(TokenType::Def)) return parseFunctionDef();
     if (match(TokenType::If)) return parseIf();
     if (match(TokenType::While)) return parseWhile();
     if (match(TokenType::For)) return parseFor();
     if (match(TokenType::Break)) return std::make_unique<BreakStmt>();
     if (match(TokenType::Continue)) return std::make_unique<ContinueStmt>();
+    if (match(TokenType::Return)) return parseReturn();
     
     // Check for assignment: identifier = expression
     if (check(TokenType::Identifier) && m_current + 1 < m_tokens.size() && m_tokens[m_current + 1].type == TokenType::Assign) {
@@ -87,8 +92,7 @@ std::unique_ptr<Stmt> Parser::parseStatement() {
 std::unique_ptr<Stmt> Parser::parseIf() {
     auto condition = parseExpression();
     if (!match(TokenType::Colon)) throw std::runtime_error("Expected ':' after if condition");
-    while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
-    // Require INDENT before block
+    skipNewlines();
     if (!match(TokenType::Indent)) throw std::runtime_error("Expected indentation after ':'");
     auto thenBlock = parseBlock();
     std::vector<std::unique_ptr<Stmt>> thenBranch;
@@ -97,9 +101,8 @@ std::unique_ptr<Stmt> Parser::parseIf() {
     }
     std::vector<std::unique_ptr<Stmt>> elseBranch;
     if (match(TokenType::Else)) {
-        while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
         if (!match(TokenType::Colon)) throw std::runtime_error("Expected ':' after else");
-        while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
+        skipNewlines();
         if (!match(TokenType::Indent)) throw std::runtime_error("Expected indentation after else ':'");
         auto elseBlock = parseBlock();
         if (auto block = dynamic_cast<BlockStmt*>(elseBlock.get())) {
@@ -111,10 +114,8 @@ std::unique_ptr<Stmt> Parser::parseIf() {
 
 std::unique_ptr<Stmt> Parser::parseWhile() {
     auto condition = parseExpression();
-    while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
     if (!match(TokenType::Colon)) throw std::runtime_error("Expected ':' after while condition");
-    while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
-    // Require INDENT before block
+    skipNewlines();
     if (!match(TokenType::Indent)) throw std::runtime_error("Expected indentation after ':'");
     auto bodyBlock = parseBlock();
     std::vector<std::unique_ptr<Stmt>> body;
@@ -129,10 +130,8 @@ std::unique_ptr<Stmt> Parser::parseFor() {
     std::string var = previous().text;
     if (!match(TokenType::In)) throw std::runtime_error("Expected 'in' in for loop");
     auto iterable = parseExpression();
-    while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
     if (!match(TokenType::Colon)) throw std::runtime_error("Expected ':' after for loop");
-    while (match(TokenType::Newline) || match(TokenType::Semicolon)) {}
-    // Require INDENT before block
+    skipNewlines();
     if (!match(TokenType::Indent)) throw std::runtime_error("Expected indentation after ':'");
     auto bodyBlock = parseBlock();
     std::vector<std::unique_ptr<Stmt>> body;
@@ -145,7 +144,8 @@ std::unique_ptr<Stmt> Parser::parseFor() {
 std::unique_ptr<Stmt> Parser::parseBlock() {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!isAtEnd() && !check(TokenType::Dedent)) {
-        if (check(TokenType::Newline)) { advance(); continue; }
+        skipNewlines();
+        if (check(TokenType::Dedent)) break;
         auto stmt = parseStatement();
         if (stmt) statements.push_back(std::move(stmt));
     }
@@ -168,7 +168,7 @@ std::unique_ptr<Expr> Parser::parseExpression(int precedence) {
             break;
         }
         
-        advance(); // consume the operator
+        advance();
         left = (this->*rule->second.infix)(std::move(left));
     }
     
@@ -181,7 +181,7 @@ std::unique_ptr<Expr> Parser::parsePrecedence() {
         throw std::runtime_error("Unexpected token: " + peek().text);
     }
     
-    advance(); // consume the token
+    advance();
     return (this->*rule->second.prefix)();
 }
 
@@ -196,6 +196,14 @@ std::unique_ptr<Expr> Parser::parseString() {
 
 std::unique_ptr<Expr> Parser::parseVariable() {
     return std::make_unique<VariableExpr>(previous().text);
+}
+
+std::unique_ptr<Expr> Parser::parseBoolean() {
+    return std::make_unique<NumberExpr>(previous().type == TokenType::True ? 1.0 : 0.0);
+}
+
+std::unique_ptr<Expr> Parser::parseNone() {
+    return std::make_unique<NumberExpr>(0.0); // None is represented as 0
 }
 
 std::unique_ptr<Expr> Parser::parseGrouping() {
@@ -297,6 +305,57 @@ std::vector<std::unique_ptr<Expr>> Parser::parseArguments() {
     return args;
 }
 
+std::unique_ptr<Stmt> Parser::parseFunctionDef() {
+    if (!match(TokenType::Identifier)) {
+        throw std::runtime_error("Expected function name after 'def'");
+    }
+    std::string name = previous().text;
+    
+    if (!match(TokenType::LeftParen)) {
+        throw std::runtime_error("Expected '(' after function name");
+    }
+    
+    std::vector<std::string> parameters;
+    if (!check(TokenType::RightParen)) {
+        do {
+            if (!match(TokenType::Identifier)) {
+                throw std::runtime_error("Expected parameter name");
+            }
+            parameters.push_back(previous().text);
+        } while (match(TokenType::Comma));
+    }
+    
+    if (!match(TokenType::RightParen)) {
+        throw std::runtime_error("Expected ')' after function parameters");
+    }
+    
+    if (!match(TokenType::Colon)) {
+        throw std::runtime_error("Expected ':' after function parameters");
+    }
+    
+    skipNewlines();
+    
+    if (!match(TokenType::Indent)) {
+        throw std::runtime_error("Expected indentation after function definition");
+    }
+    
+    auto bodyBlock = parseBlock();
+    std::vector<std::unique_ptr<Stmt>> body;
+    if (auto block = dynamic_cast<BlockStmt*>(bodyBlock.get())) {
+        body = std::move(block->statements);
+    }
+    
+    return std::make_unique<FunctionDefStmt>(name, std::move(parameters), std::move(body));
+}
+
+std::unique_ptr<Stmt> Parser::parseReturn() {
+    std::unique_ptr<Expr> value = nullptr;
+    if (!check(TokenType::Newline)) {
+        value = parseExpression();
+    }
+    return std::make_unique<ReturnStmt>(std::move(value));
+}
+
 // --- Helpers ---
 int Parser::getPrecedence(TokenType type) const {
     auto it = s_parseRules.find(type);
@@ -331,4 +390,8 @@ const Token& Parser::previous() const {
 
 bool Parser::isAtEnd() const {
     return peek().type == TokenType::EndOfInput;
+}
+
+void Parser::skipNewlines() {
+    while (match(TokenType::Newline)) {}
 }

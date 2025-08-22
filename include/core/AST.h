@@ -1,5 +1,6 @@
 #ifndef AST_H
 #define AST_H
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -8,12 +9,11 @@
 struct Expr;
 struct Stmt;
 
-// --- Expression base ---
+// --- Expression nodes ---
 struct Expr {
     virtual ~Expr() = default;
 };
 
-// --- Expression nodes ---
 struct NumberExpr : Expr {
     double value;
     NumberExpr(double v) : value(v) {}
@@ -32,7 +32,7 @@ struct VariableExpr : Expr {
 struct BinaryExpr : Expr {
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
-    std::string op; // Use TokenType or string for operator
+    std::string op;
     BinaryExpr(std::unique_ptr<Expr> l, std::string o, std::unique_ptr<Expr> r)
         : left(std::move(l)), op(std::move(o)), right(std::move(r)) {}
 };
@@ -78,12 +78,11 @@ struct MemberAccessExpr : Expr {
         : object(std::move(obj)), member(mem) {}
 };
 
-// --- Statement base ---
+// --- Statement nodes ---
 struct Stmt {
     virtual ~Stmt() = default;
 };
 
-// --- Statement nodes ---
 struct ExpressionStmt : Stmt {
     std::unique_ptr<Expr> expr;
     ExpressionStmt(std::unique_ptr<Expr> e) : expr(std::move(e)) {}
@@ -135,6 +134,19 @@ struct BreakStmt : Stmt {
 
 struct ContinueStmt : Stmt {
     ContinueStmt() = default;
+};
+
+struct FunctionDefStmt : Stmt {
+    std::string name;
+    std::vector<std::string> parameters;
+    std::vector<std::unique_ptr<Stmt>> body;
+    FunctionDefStmt(const std::string& n, std::vector<std::string> params, std::vector<std::unique_ptr<Stmt>> b)
+        : name(n), parameters(std::move(params)), body(std::move(b)) {}
+};
+
+struct ReturnStmt : Stmt {
+    std::unique_ptr<Expr> value;
+    ReturnStmt(std::unique_ptr<Expr> v) : value(std::move(v)) {}
 };
 
 #endif // AST_H
