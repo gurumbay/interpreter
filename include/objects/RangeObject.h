@@ -1,8 +1,9 @@
 #ifndef RANGE_OBJECT_H
 #define RANGE_OBJECT_H
-#include "objects/Object.h"
-#include "objects/IteratorObject.h"
+
 #include <memory>
+#include "objects/IteratorObject.h"
+#include "objects/Object.h"
 
 class RangeObject : public Object {
 public:

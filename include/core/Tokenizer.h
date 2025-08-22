@@ -1,8 +1,9 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
+
+#include <queue>
 #include <string>
 #include <vector>
-#include <queue>
 #include "core/Token.h"
 
 class Tokenizer {

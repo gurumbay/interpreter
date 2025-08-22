@@ -1,5 +1,6 @@
 #ifndef TOKEN_H
 #define TOKEN_H
+
 #include <ostream>
 #include <string>
 #include <variant>

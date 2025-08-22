@@ -1,8 +1,9 @@
 #ifndef LIST_OBJECT_H
 #define LIST_OBJECT_H
-#include "objects/Object.h"
-#include "objects/IteratorObject.h"
+
 #include <vector>
+#include "objects/IteratorObject.h"
+#include "objects/Object.h"
 
 class ListObject : public Object {
 public:
