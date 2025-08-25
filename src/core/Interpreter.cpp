@@ -9,7 +9,6 @@
 #include "objects/IteratorObject.h"
 #include "objects/FunctionObject.h"
 
-// Exception implementations
 const char* BreakException::what() const noexcept {
     return "Break";
 }
@@ -61,11 +60,7 @@ void Interpreter::visitAssignStmt(const AssignStmt* stmt) {
 
 void Interpreter::visitIfStmt(const IfStmt* stmt) {
     ObjectPtr cond = eval(stmt->condition.get());
-    bool condVal = false;
-    if (auto num = std::dynamic_pointer_cast<NumberObject>(cond)) condVal = num->value != 0.0;
-    else if (auto str = std::dynamic_pointer_cast<StringObject>(cond)) condVal = !str->value.empty();
-    else throw std::runtime_error("Invalid condition in if");
-    if (condVal) {
+    if (isTruthy(cond)) {
         for (const auto& s : stmt->thenBranch) visit(s.get());
     } else {
         for (const auto& s : stmt->elseBranch) visit(s.get());
@@ -73,13 +68,7 @@ void Interpreter::visitIfStmt(const IfStmt* stmt) {
 }
 
 void Interpreter::visitWhileStmt(const WhileStmt* stmt) {
-    while (true) {
-        ObjectPtr cond = eval(stmt->condition.get());
-        bool condVal = false;
-        if (auto num = std::dynamic_pointer_cast<NumberObject>(cond)) condVal = num->value != 0.0;
-        else if (auto str = std::dynamic_pointer_cast<StringObject>(cond)) condVal = !str->value.empty();
-        else throw std::runtime_error("Invalid condition in while");
-        if (!condVal) break;
+    while (isTruthy(eval(stmt->condition.get()))) {
         try {
             for (const auto& s : stmt->body) visit(s.get());
         } catch (const BreakException&) {
@@ -151,31 +140,20 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
 
         if (auto lnum = std::dynamic_pointer_cast<NumberObject>(left)) {
             if (auto rnum = std::dynamic_pointer_cast<NumberObject>(right)) {
-                double l = lnum->value, r = rnum->value;
-                if (op == "+") return std::make_shared<NumberObject>(l + r);
-                if (op == "-") return std::make_shared<NumberObject>(l - r);
-                if (op == "*") return std::make_shared<NumberObject>(l * r);
-                if (op == "/") return std::make_shared<NumberObject>(l / r);
-                if (op == "%") return std::make_shared<NumberObject>(std::fmod(l, r));
-                if (op == "==") return std::make_shared<NumberObject>(l == r ? 1.0 : 0.0);
-                if (op == "!=") return std::make_shared<NumberObject>(l != r ? 1.0 : 0.0);
-                if (op == "<") return std::make_shared<NumberObject>(l < r ? 1.0 : 0.0);
-                if (op == ">") return std::make_shared<NumberObject>(l > r ? 1.0 : 0.0);
-                if (op == "<=") return std::make_shared<NumberObject>(l <= r ? 1.0 : 0.0);
-                if (op == ">=") return std::make_shared<NumberObject>(l >= r ? 1.0 : 0.0);
-                if (op == "**") return std::make_shared<NumberObject>(std::pow(l, r));
-                if (op == "and") return std::make_shared<NumberObject>((l && r) ? 1.0 : 0.0);
-                if (op == "or") return std::make_shared<NumberObject>((l || r) ? 1.0 : 0.0);
-                throw std::runtime_error("Unsupported binary operator for numbers: " + op);
+                return evaluateNumberOperation(lnum->value, rnum->value, op);
+            }
+            if (auto rstr = std::dynamic_pointer_cast<StringObject>(right)) {
+                return evaluateStringNumberOperation(rstr->value, lnum->value, op);
             }
         }
-        if (op == "+") {
-            if (auto lstr = std::dynamic_pointer_cast<StringObject>(left)) {
-                if (auto rstr = std::dynamic_pointer_cast<StringObject>(right)) {
-                    return std::make_shared<StringObject>(lstr->value + rstr->value);
-                }
+        if (auto lstr = std::dynamic_pointer_cast<StringObject>(left)) {
+            if (auto rstr = std::dynamic_pointer_cast<StringObject>(right)) {
+                return evaluateStringOperation(lstr->value, rstr->value, op);
+            } else if (auto rnum = std::dynamic_pointer_cast<NumberObject>(right)) {
+                return evaluateStringNumberOperation(lstr->value, rnum->value, op);
             }
         }
+
         throw std::runtime_error("Type error in binary expression");
     } else if (auto e = dynamic_cast<const UnaryExpr*>(expr)) {
         ObjectPtr operand = eval(e->operand.get());
@@ -186,9 +164,7 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
             throw std::runtime_error("Unary '-' expects a number");
         }
         if (e->op == "not") {
-            if (auto num = std::dynamic_pointer_cast<NumberObject>(operand)) return std::make_shared<NumberObject>(num->value == 0.0 ? 1.0 : 0.0);
-            if (auto str = std::dynamic_pointer_cast<StringObject>(operand)) return std::make_shared<NumberObject>(str->value.empty() ? 1.0 : 0.0);
-            throw std::runtime_error("Unary 'not' expects a number or string");
+            return std::make_shared<NumberObject>(isTruthy(operand) ? 0.0 : 1.0);
         }
         throw std::runtime_error("Unknown unary operator: " + e->op);
     } else if (auto e = dynamic_cast<const AssignExpr*>(expr)) {
@@ -251,7 +227,6 @@ ObjectPtr Interpreter::eval(const Expr* expr) {
 }
 
 void Interpreter::setupBuiltinFunctions() {
-    // Print function
     auto print_func = [](const std::vector<ObjectPtr>& args) -> ObjectPtr {
         bool first = true;
         for (const auto& arg : args) {
@@ -269,7 +244,6 @@ void Interpreter::setupBuiltinFunctions() {
         return std::make_shared<NumberObject>(0.0);
     };
     
-    // Range function
     auto range_func = [](const std::vector<ObjectPtr>& args) -> ObjectPtr {
         size_t argc = args.size();
         double start = 0, stop = 0, step = 1;
@@ -296,7 +270,6 @@ void Interpreter::setupBuiltinFunctions() {
         return std::make_shared<RangeObject>(start, stop, step);
     };
     
-    // Len function
     auto len_func = [](const std::vector<ObjectPtr>& args) -> ObjectPtr {
         if (args.size() != 1) {
             throw std::runtime_error("len() expects exactly 1 argument");
@@ -356,4 +329,57 @@ ObjectPtr Interpreter::callFunction(ObjectPtr callee, const std::vector<ObjectPt
     }
     
     throw std::runtime_error("Can only call functions");
+}
+
+ObjectPtr Interpreter::evaluateNumberOperation(double left, double right, const std::string& op) {
+    if (op == "+") return std::make_shared<NumberObject>(left + right);
+    if (op == "-") return std::make_shared<NumberObject>(left - right);
+    if (op == "*") return std::make_shared<NumberObject>(left * right);
+    if (op == "/") return std::make_shared<NumberObject>(left / right);
+    if (op == "%") return std::make_shared<NumberObject>(std::fmod(left, right));
+    if (op == "==") return std::make_shared<NumberObject>(left == right ? 1.0 : 0.0);
+    if (op == "!=") return std::make_shared<NumberObject>(left != right ? 1.0 : 0.0);
+    if (op == "<") return std::make_shared<NumberObject>(left < right ? 1.0 : 0.0);
+    if (op == ">") return std::make_shared<NumberObject>(left > right ? 1.0 : 0.0);
+    if (op == "<=") return std::make_shared<NumberObject>(left <= right ? 1.0 : 0.0);
+    if (op == ">=") return std::make_shared<NumberObject>(left >= right ? 1.0 : 0.0);
+    if (op == "**") return std::make_shared<NumberObject>(std::pow(left, right));
+    if (op == "and") return std::make_shared<NumberObject>((left && right) ? 1.0 : 0.0);
+    if (op == "or") return std::make_shared<NumberObject>((left || right) ? 1.0 : 0.0);
+    
+    throw std::runtime_error("Unsupported binary operator for numbers: " + op);
+}
+
+ObjectPtr Interpreter::evaluateStringOperation(const std::string& left, const std::string& right, const std::string& op) {
+    if (op == "+") return std::make_shared<StringObject>(left + right);
+    
+    throw std::runtime_error("Unsupported binary operator for strings: " + op);
+}
+
+ObjectPtr Interpreter::evaluateStringNumberOperation(const std::string& str, double num, const std::string& op) {
+    if (op == "*") {
+        // String repetition: "abc" * 3 = "abcabcabc"
+        int count = static_cast<int>(num);
+        if (count < 0) throw std::runtime_error("String repetition count must be non-negative");
+        
+        std::string result;
+        result.reserve(str.length() * count);
+        for (int i = 0; i < count; ++i) {
+            result += str;
+        }
+        return std::make_shared<StringObject>(result);
+    }
+    
+    throw std::runtime_error("Unsupported binary operator for string and number: " + op);
+}
+
+bool Interpreter::isTruthy(ObjectPtr value) {
+    if (auto num = std::dynamic_pointer_cast<NumberObject>(value)) {
+        return num->value != 0.0;
+    }
+    if (auto str = std::dynamic_pointer_cast<StringObject>(value)) {
+        return !str->value.empty();
+    }
+    // All other objects are considered truthy
+    return true;
 }

@@ -45,6 +45,12 @@ private:
     // Built-in functions
     void setupBuiltinFunctions();
     ObjectPtr callFunction(ObjectPtr callee, const std::vector<ObjectPtr>& arguments);
+    
+    // Helper methods for operation evaluation
+    ObjectPtr evaluateNumberOperation(double left, double right, const std::string& op);
+    ObjectPtr evaluateStringOperation(const std::string& left, const std::string& right, const std::string& op);
+    ObjectPtr evaluateStringNumberOperation(const std::string& str, double num, const std::string& op);
+    bool isTruthy(ObjectPtr value);
 };
 
 #endif // INTERPRETER_H

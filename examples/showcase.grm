@@ -136,6 +136,11 @@ print("\nString length:")
 print("  len(text) =", len(text))
 print("  text.length =", text.length)
 
+print("\nString multiplication:")
+print("  'Hi' * 3 =", "Hi" * 3)
+print("  2 * 'Hello' =", 2 * "Hello")
+print("  'abc' * 0 =", "abc" * 0)
+
 # =============================================
 # 8. LISTS
 # =============================================
@@ -351,3 +356,4 @@ print("Nested structures and complex expressions")
 
 print("\nINTERPRETER SHOWCASE COMPLETED SUCCESSFULLY!")
 print("The interpreter supports almost all core Python-like features!")
+print("*" * 60)
